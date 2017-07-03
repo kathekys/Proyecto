@@ -5,6 +5,14 @@
  */
 package proyectofinal;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import javax.swing.JOptionPane;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -16,11 +24,16 @@ public class Productos extends javax.swing.JFrame {
     /**
      * Creates new form Productos
      */
+    VerificarCedula c = new VerificarCedula();
+    public DefaultTableModel model;
+
     public Productos() {
         initComponents();
-        TituloTablaProveedores();
+        cargarTabla("");
+//        h1 = new Thread((Runnable) this);
+        // h1.start();
+        cargarDatos();
     }
-    DefaultTableModel modeloTabla = new DefaultTableModel();
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -52,6 +65,8 @@ public class Productos extends javax.swing.JFrame {
         jTextField_PrecCosProd = new javax.swing.JTextField();
         jLabel8 = new javax.swing.JLabel();
         jButton2 = new javax.swing.JButton();
+        jLabel9 = new javax.swing.JLabel();
+        jTextFieldCategoria_Prod = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTable_Productos = new javax.swing.JTable();
         jButton_IngresarProducto = new javax.swing.JButton();
@@ -78,6 +93,12 @@ public class Productos extends javax.swing.JFrame {
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Buscador", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Times New Roman", 1, 14), new java.awt.Color(0, 51, 51))); // NOI18N
         jPanel1.setForeground(new java.awt.Color(0, 0, 51));
         jPanel1.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
+
+        jTextField_BuscadorProd.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                jTextField_BuscadorProdKeyReleased(evt);
+            }
+        });
 
         jButton1.setText("Buscar");
 
@@ -125,6 +146,9 @@ public class Productos extends javax.swing.JFrame {
         jButton2.setFont(new java.awt.Font("Times New Roman", 0, 14)); // NOI18N
         jButton2.setText("Ingresar");
 
+        jLabel9.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
+        jLabel9.setText("Categoria:");
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -146,20 +170,22 @@ public class Productos extends javax.swing.JFrame {
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jTextField_CantidadProd, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 82, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel6)
-                            .addComponent(jLabel5))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jTextField_PrecVentProd, javax.swing.GroupLayout.DEFAULT_SIZE, 79, Short.MAX_VALUE)
-                            .addComponent(jTextField_PrecCosProd)))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(jLabel8)
                         .addGap(32, 32, 32)
-                        .addComponent(jButton2)))
+                        .addComponent(jButton2))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel6)
+                            .addComponent(jLabel5)
+                            .addComponent(jLabel9))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jTextField_PrecVentProd, javax.swing.GroupLayout.DEFAULT_SIZE, 79, Short.MAX_VALUE)
+                            .addComponent(jTextField_PrecCosProd)
+                            .addComponent(jTextFieldCategoria_Prod))))
                 .addGap(45, 45, 45))
         );
         jPanel3Layout.setVerticalGroup(
@@ -180,7 +206,9 @@ public class Productos extends javax.swing.JFrame {
                 .addGap(5, 5, 5)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel7)
-                    .addComponent(jTextField_ColorProd, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jTextField_ColorProd, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel9)
+                    .addComponent(jTextFieldCategoria_Prod, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(1, 1, 1)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
@@ -246,27 +274,181 @@ public class Productos extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 public void Insertarfilas() {
-   
-        String[] fila = new String[6];
-        fila[0] = jTextField_CódigoProd.getText();
-        fila[1] = jTextField_NombreProd.getText();
-        fila[2] = jTextField_ColorProd.getText();
-        fila[3] = jTextField_PrecCosProd.getText();
-        fila[4] =  jTextField_PrecVentProd.getText();
-        fila[5] =  jTextField_CantidadProd.getText();
-        modeloTabla.addRow(fila);
-        jTable_Productos.setModel(modeloTabla);
-        
+
     }
-  public void TituloTablaProveedores() {
-        String[] titulo = {"Código", "Nombre", "Color", "Precio Costo", "Precio Venta","Cantidad"};
-        modeloTabla = new DefaultTableModel(null, titulo);
-        jTable_Productos.setModel(modeloTabla);
+
+    public void TituloTablaProveedores() {
+
     }
     private void jButton_IngresarProductoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton_IngresarProductoActionPerformed
         // TODO add your handling code here:
-        Insertarfilas();
+        guardarProductos();
+        cargarTabla("");
     }//GEN-LAST:event_jButton_IngresarProductoActionPerformed
+
+    private void jTextField_BuscadorProdKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField_BuscadorProdKeyReleased
+        // TODO add your handling code here:
+         cargarTabla(jTextField_BuscadorProd.getText());
+    }//GEN-LAST:event_jTextField_BuscadorProdKeyReleased
+    public void guardarProductos() {
+        Connection cn = (new ConexionBD()).conectar();
+
+        if (jTextField_CódigoProd.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar Codigo");
+            jTextField_CódigoProd.requestFocus();
+        } else if (jTextField_NombreProd.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar nombre");
+            jTextField_NombreProd.requestFocus();
+        } else if (jTextField_ColorProd.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar color");
+            jTextField_ColorProd.requestFocus();
+        } else if (jTextField_CantidadProd.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar cantidad");
+            jTextField_CantidadProd.requestFocus();
+        } else if (jTextField_PrecVentProd.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar Precio Venta");
+            jTextField_PrecVentProd.requestFocus();
+        } else if (jTextField_PrecCosProd.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar precio Compra");
+            jTextField_PrecCosProd.requestFocus();
+        } else if (jTextFieldCategoria_Prod.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar Categoria");
+            jTextFieldCategoria_Prod.requestFocus();
+        } else {
+            try {
+
+                String Codigo = jTextField_CódigoProd.getText().toUpperCase();
+                String Nombre = jTextField_NombreProd.getText().toUpperCase();
+                String Color = jTextField_ColorProd.getText().toUpperCase();
+                String Cantidad = jTextField_CantidadProd.getText().toUpperCase();
+                String PrecioVenta = jTextField_PrecVentProd.getText().toUpperCase();
+                String PrecioCompra = jTextField_PrecCosProd.getText().toUpperCase();
+                String Categoria = jTextFieldCategoria_Prod.getText().toUpperCase();
+
+                String sql = "insert into productos (COD_PRO, NOM_PRO, COL_PRO, CANT_PRO, PRE_VEN_PRO,PRE_COMP_PRO,CAT_PRO)values(?,?,?,?,?,?,?)";
+
+                PreparedStatement psd = cn.prepareStatement(sql);
+                psd.setString(1, Codigo);
+                psd.setString(2, Nombre);
+                psd.setString(3, Color);
+                psd.setString(4, Cantidad);
+                psd.setString(5, PrecioVenta);
+                psd.setString(6, PrecioCompra);
+                psd.setString(7, Categoria);
+
+                if (psd.executeUpdate() > 0) {
+                    JOptionPane.showMessageDialog(null, "Se ha insertado el dato");
+                }
+
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, "No se ha insertado el dato");
+            }
+        }
+
+    }
+
+    public void cargarDatos() {
+        jTable_Productos.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (jTable_Productos.getSelectedRow() != -1) {
+                    int fila = jTable_Productos.getSelectedRow();
+                    jTextField_CódigoProd.setText(jTable_Productos.getValueAt(fila, 0).toString());
+                    jTextField_NombreProd.setText(jTable_Productos.getValueAt(fila, 1).toString());
+                    jTextField_ColorProd.setText(jTable_Productos.getValueAt(fila, 2).toString());
+                    jTextField_CantidadProd.setText(jTable_Productos.getValueAt(fila, 3).toString());
+                    jTextField_PrecVentProd.setText(jTable_Productos.getValueAt(fila, 4).toString());
+                    jTextField_PrecCosProd.setText(jTable_Productos.getValueAt(fila, 5).toString());
+                    jTextFieldCategoria_Prod.setText(jTable_Productos.getValueAt(fila, 6).toString());
+                    //desbloquear();                    
+                }
+            }
+        });
+    }
+
+    public void limpiar() {
+//        txtCedula.setText("");
+//        txtNombre.setText("");
+//        txtApellido.setText("");
+//        txtDireccion.setText("");
+//        txtBuscarCedula.setText("");
+//        txtTelefono.setText("");
+    }
+
+    public void bloquear() {
+//        txtCedula.setEnabled(true);
+//        txtNombre.setEnabled(true);
+//        txtApellido.setEnabled(true);
+//        txtDireccion.setEnabled(true);
+//        txtTelefono.setEnabled(true);
+//        btActualizar.setEnabled(false);
+//        btEliminar.setEnabled(false);
+//        btCancelar.setEnabled(false);
+    }
+
+    public void desbloquear() {
+//        txtNombre.setEnabled(true);
+//        txtApellido.setEnabled(true);
+//        txtDireccion.setEnabled(true);
+//        txtTelefono.setEnabled(true);
+//        btActualizar.setEnabled(true);
+//        btEliminar.setEnabled(true);
+//        btCancelar.setEnabled(true);
+//        txtBuscarCedula.setEnabled(true);
+
+    }
+
+    public void cargarTabla(String dato) {
+        Connection cn = (new ConexionBD()).conectar();
+
+        String[] titulo = {"Cedula", "Nombre", "Apellido", "Direccion", "Teléfono"};
+        String[] registros = new String[7];
+        String sql;
+        sql = "SELECT * FROM PRODUCTOS WHERE COD_PRO LIKE '" + dato + "%'";
+        model = new DefaultTableModel(null, titulo);
+        try {
+            Statement st = cn.createStatement();
+            ResultSet rs = st.executeQuery(sql);
+            while (rs.next()) {
+                registros[0] = rs.getString("COD_PRO");
+                registros[1] = rs.getString("NOM_PRO");
+                registros[2] = rs.getString("COL_PRO");
+                registros[3] = rs.getString("CANT_PRO");
+                registros[4] = rs.getString("PRE_VEN_PRO");
+                registros[5] = rs.getString("PRE_COMP_PRO");
+                registros[6] = rs.getString("CAT_PRO");
+                model.addRow(registros);
+                jTable_Productos.setModel(model);
+
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "La tabla PRODUCTOS tiene problemas al cargarse\n" + ex);
+        }
+    }
+
+    public void actualizarEmpleados() {
+        Connection cn = (new ConexionBD()).conectar();
+
+        String sql;
+        sql = "update cajeros set  NOM_EMP ='" + jTextField_NombreProd.getText() + "',"
+                + "APE_EMP='" + jTextField_ColorProd.getText() + "',"
+                + "DIR_EMP='" + jTextField_CantidadProd.getText() + "',"
+                + "TEL_EMP='" + jTextField_PrecVentProd.getText() + "'"
+                 + "DIR_EMP='" + jTextField_PrecCosProd.getText() + "',"
+                + "TEL_EMP='" + jTextFieldCategoria_Prod.getText() + "'"
+                + "where CED_EMP='" + jTextField_CódigoProd.getText() + "'";
+        try {
+            PreparedStatement psd = cn.prepareStatement(sql);
+            int n = psd.executeUpdate();//Ejecutar el 
+            if (n > 0) {
+                JOptionPane.showMessageDialog(this, "Se actualizo correctamente");
+                cargarTabla("");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "No se pudo actualizar" + ex);
+        }
+    }
 
     /**
      * @param args the command line arguments
@@ -315,12 +497,14 @@ public void Insertarfilas() {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable_Productos;
+    private javax.swing.JTextField jTextFieldCategoria_Prod;
     private javax.swing.JTextField jTextField_BuscadorProd;
     private javax.swing.JTextField jTextField_CantidadProd;
     private javax.swing.JTextField jTextField_ColorProd;

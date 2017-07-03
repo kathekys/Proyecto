@@ -59,8 +59,8 @@ public void guardarEmpeleados() {
                 String Cedula = jTextField_CedEmpleado.getText().toUpperCase();
                 String Nombre = jTextField_NombreEmpleado.getText().toUpperCase();
                 String Apellido = jTextField_ApellidoEmpleado.getText().toUpperCase();
-                String Telefono = jTextField_DireccionEmpleado.getText().toUpperCase();
-                String Direccion = jTextField_TelefonoEmpleado.getText().toUpperCase();
+                String Telefono = jTextField_TelefonoEmpleado.getText().toUpperCase();
+                String Direccion = jTextField_DireccionEmpleado.getText().toUpperCase();
 
                 String sql = "insert into empleados (CED_EMP, NOM_EMP, APE_EMP, TEL_EMP, DIR_EMP)values(?,?,?,?,?)";
 
