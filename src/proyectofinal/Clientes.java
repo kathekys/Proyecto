@@ -1,18 +1,176 @@
 package proyectofinal;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import javax.swing.JOptionPane;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 public class Clientes extends javax.swing.JFrame {
 
+    
+     VerificarCedula c = new VerificarCedula();
+    public DefaultTableModel model;
 
     public Clientes() {
         initComponents();
          TituloTablaClientes();
+         
+          cargarTabla("");
+//        h1 = new Thread((Runnable) this);
+        // h1.start();
+        cargarDatos();
     }
-     DefaultTableModel modeloTabla = new DefaultTableModel();
+    // DefaultTableModel modeloTabla = new DefaultTableModel();
 
-   
+   public void guardarCliente() {
+        Connection cn = (new ConexionBD()).conectar();
+
+        if (jTextField_Cédula.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar cedula");
+           jTextField_Cédula.requestFocus();
+        } else if (jTextField_Nombre.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar nombre");
+            jTextField_Nombre.requestFocus();
+        } else if (jTextField_Apellido.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar apellido");
+            jTextField_Apellido.requestFocus();
+        } else if (jTextField_Dirección.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar direccion");
+           jTextField_Dirección.requestFocus();
+        } else if(jTextField_Teléfono.getText().trim().isEmpty()){
+            JOptionPane.showMessageDialog(null, "Ingresar TELEFONO");
+          jTextField_Teléfono.requestFocus();
+        }else {
+            try {
+
+                String Cedula = jTextField_Cédula.getText().toUpperCase();
+                String Nombre = jTextField_Nombre.getText().toUpperCase();
+                String Apellido = jTextField_Apellido.getText().toUpperCase();
+                String Telefono = jTextField_Teléfono.getText().toUpperCase();
+                String Direccion = jTextField_Dirección.getText().toUpperCase();
+
+                String sql = "insert into clientes (CED_CLI, NOM_CLI, APE_CLI, TEL_CLI, DIR_CLI)values(?,?,?,?,?)";
+
+                PreparedStatement psd = cn.prepareStatement(sql);
+                psd.setString(1, Cedula);
+                psd.setString(2, Nombre);
+                psd.setString(3, Apellido);
+                 psd.setString(4, Telefono);
+                psd.setString(5, Direccion);
+               
+
+                if (psd.executeUpdate() > 0) {
+                    JOptionPane.showMessageDialog(null, "Se ha insertado el dato");
+                }
+
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, "No se ha insertado el dato");
+            }
+        }
+
+    }
+
+    public void cargarDatos() {
+        jTable_Clientes.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (jTable_Clientes.getSelectedRow() != -1) {
+                    int fila = jTable_Clientes.getSelectedRow();
+                    jTextField_Cédula.setText(jTable_Clientes.getValueAt(fila, 0).toString());
+                    jTextField_Nombre.setText(jTable_Clientes.getValueAt(fila, 1).toString());
+                    jTextField_Apellido.setText(jTable_Clientes.getValueAt(fila, 2).toString());
+                    jTextField_Teléfono.setText(jTable_Clientes.getValueAt(fila, 3).toString());
+                    jTextField_Dirección.setText(jTable_Clientes.getValueAt(fila, 4).toString());
+                    //desbloquear();                    
+                }
+            }
+        });
+    }
+
+    public void limpiar() {
+//        txtCedula.setText("");
+//        txtNombre.setText("");
+//        txtApellido.setText("");
+//        txtDireccion.setText("");
+//        txtBuscarCedula.setText("");
+//        txtTelefono.setText("");
+    }
+
+    public void bloquear() {
+//        txtCedula.setEnabled(true);
+//        txtNombre.setEnabled(true);
+//        txtApellido.setEnabled(true);
+//        txtDireccion.setEnabled(true);
+//        txtTelefono.setEnabled(true);
+//        btActualizar.setEnabled(false);
+//        btEliminar.setEnabled(false);
+//        btCancelar.setEnabled(false);
+    }
+
+    public void desbloquear() {
+//        txtNombre.setEnabled(true);
+//        txtApellido.setEnabled(true);
+//        txtDireccion.setEnabled(true);
+//        txtTelefono.setEnabled(true);
+//        btActualizar.setEnabled(true);
+//        btEliminar.setEnabled(true);
+//        btCancelar.setEnabled(true);
+//        txtBuscarCedula.setEnabled(true);
+
+    }
+
+    public void cargarTabla(String dato) {
+        Connection cn = (new ConexionBD()).conectar();
+
+        String[] titulo = {"Cedula", "Nombre", "Apellido", "Direccion", "Teléfono"};
+        String[] registros = new String[5];
+        String sql;
+        sql = "SELECT * FROM CLIENTES WHERE CED_CLI LIKE '" + dato + "%'";
+        model = new DefaultTableModel(null, titulo);
+        try {
+            Statement st = cn.createStatement();
+            ResultSet rs = st.executeQuery(sql);
+            while (rs.next()) {
+                registros[0] = rs.getString("CED_CLI");
+                registros[1] = rs.getString("NOM_CLI");
+                registros[2] = rs.getString("APE_CLI");
+                registros[3] = rs.getString("DIR_CLI");
+                registros[4] = rs.getString("TEL_CLI");
+                model.addRow(registros);
+                jTable_Clientes.setModel(model);
+
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "La tabla CLIENTES tiene problemas al cargarse\n" + ex);
+        }
+    }
+
+    public void actualizarClientes() {
+        Connection cn = (new ConexionBD()).conectar();
+
+        String sql;
+        sql = "update cajeros set  NOM_CLI ='" + jTextField_Nombre.getText() + "',"
+                + "APE_CLI='" + jTextField_Apellido.getText() + "',"
+                + "DIR_CLI='" + jTextField_Dirección.getText() + "',"
+                + "TEL_CLI='" + jTextField_Teléfono.getText() + "'"
+                + "where CED_CLI='" + jTextField_Cédula.getText() + "'";
+        try {
+            PreparedStatement psd = cn.prepareStatement(sql);
+            int n = psd.executeUpdate();//Ejecutar el 
+            if (n > 0) {
+                JOptionPane.showMessageDialog(this, "Se actualizo correctamente");
+                cargarTabla("");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "No se pudo actualizar" + ex);
+        }
+    }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -22,7 +180,7 @@ public class Clientes extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
         jCheckBox1 = new javax.swing.JCheckBox();
         jCheckBox2 = new javax.swing.JCheckBox();
-        jTextField2 = new javax.swing.JTextField();
+        jTextField_BuscadorCed = new javax.swing.JTextField();
         jTextField3 = new javax.swing.JTextField();
         jPanel2 = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
@@ -54,6 +212,12 @@ public class Clientes extends javax.swing.JFrame {
         buttonGroup1.add(jCheckBox2);
         jCheckBox2.setText("Apellido");
 
+        jTextField_BuscadorCed.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                jTextField_BuscadorCedKeyReleased(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -62,7 +226,7 @@ public class Clientes extends javax.swing.JFrame {
                 .addGap(40, 40, 40)
                 .addComponent(jCheckBox1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jTextField_BuscadorCed, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jCheckBox2, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -77,7 +241,7 @@ public class Clientes extends javax.swing.JFrame {
                 .addComponent(jButton1)
                 .addComponent(jCheckBox1)
                 .addComponent(jCheckBox2)
-                .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jTextField_BuscadorCed, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
@@ -86,6 +250,11 @@ public class Clientes extends javax.swing.JFrame {
         jLabel4.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
         jLabel4.setText("Cédula:");
 
+        jTextField_Cédula.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                jTextField_CédulaFocusLost(evt);
+            }
+        });
         jTextField_Cédula.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyTyped(java.awt.event.KeyEvent evt) {
                 jTextField_CédulaKeyTyped(evt);
@@ -150,15 +319,6 @@ public class Clientes extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel5)
-                        .addGap(21, 21, 21)
-                        .addComponent(jTextField_Dirección, javax.swing.GroupLayout.PREFERRED_SIZE, 245, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(54, 54, 54)
-                        .addComponent(BtnIngresar_Cliente)
-                        .addGap(18, 18, 18)
-                        .addComponent(BtnCancelar_Clientes)
-                        .addContainerGap(71, Short.MAX_VALUE))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel3)
                             .addComponent(jLabel4)
@@ -168,11 +328,23 @@ public class Clientes extends javax.swing.JFrame {
                             .addComponent(jTextField_Nombre, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE)
                             .addComponent(jTextField_Cédula, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jTextField_Apellido))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel6)
-                        .addGap(39, 39, 39)
-                        .addComponent(jTextField_Teléfono, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(19, 19, 19))))
+                        .addGap(19, 300, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel5)
+                            .addComponent(jLabel6))
+                        .addGap(21, 21, 21)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(jTextField_Teléfono, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(jTextField_Dirección, javax.swing.GroupLayout.PREFERRED_SIZE, 245, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(54, 54, 54)
+                                .addComponent(BtnIngresar_Cliente)
+                                .addGap(18, 18, 18)
+                                .addComponent(BtnCancelar_Clientes)
+                                .addContainerGap(71, Short.MAX_VALUE))))))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -180,9 +352,7 @@ public class Clientes extends javax.swing.JFrame {
                 .addContainerGap(20, Short.MAX_VALUE)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
-                    .addComponent(jTextField_Cédula, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel6)
-                    .addComponent(jTextField_Teléfono, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jTextField_Cédula, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
@@ -197,7 +367,11 @@ public class Clientes extends javax.swing.JFrame {
                     .addComponent(jTextField_Dirección, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(BtnIngresar_Cliente)
                     .addComponent(BtnCancelar_Clientes))
-                .addGap(29, 29, 29))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(jTextField_Teléfono, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(4, 4, 4))
         );
 
         jTable_Clientes.setModel(new javax.swing.table.DefaultTableModel(
@@ -234,7 +408,7 @@ public class Clientes extends javax.swing.JFrame {
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 135, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(67, Short.MAX_VALUE))
+                .addContainerGap(66, Short.MAX_VALUE))
         );
 
         pack();
@@ -242,20 +416,20 @@ public class Clientes extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
  public void Insertarfilas() {
    
-        String[] fila = new String[5];
-        fila[0] = jTextField_Cédula.getText();
-        fila[1] = jTextField_Nombre.getText();
-        fila[2] = jTextField_Apellido.getText();
-        fila[3] = jTextField_Teléfono.getText();
-        fila[4] =  jTextField_Dirección.getText();
-        modeloTabla.addRow(fila);
-        jTable_Clientes.setModel(modeloTabla);
+//        String[] fila = new String[5];
+//        fila[0] = jTextField_Cédula.getText();
+//        fila[1] = jTextField_Nombre.getText();
+//        fila[2] = jTextField_Apellido.getText();
+//        fila[3] = jTextField_Teléfono.getText();
+//        fila[4] =  jTextField_Dirección.getText();
+//        modeloTabla.addRow(fila);
+//        jTable_Clientes.setModel(modeloTabla);
         
     }
   public void TituloTablaClientes() {
-        String[] titulo = {"Cédula", "Nombre", "Apellido", "Teléfono", "Dirección"};
-        modeloTabla = new DefaultTableModel(null, titulo);
-        jTable_Clientes.setModel(modeloTabla);
+//        String[] titulo = {"Cédula", "Nombre", "Apellido", "Teléfono", "Dirección"};
+//        modeloTabla = new DefaultTableModel(null, titulo);
+//        jTable_Clientes.setModel(modeloTabla);
     }
     private void jTextField_CédulaKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField_CédulaKeyTyped
         // TODO add your handling code here:
@@ -294,8 +468,20 @@ public class Clientes extends javax.swing.JFrame {
 
     private void BtnIngresar_ClienteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnIngresar_ClienteActionPerformed
         // TODO add your handling code here:
-        Insertarfilas();
+        //Insertarfilas();
+        guardarCliente();
+        cargarTabla("");
     }//GEN-LAST:event_BtnIngresar_ClienteActionPerformed
+
+    private void jTextField_BuscadorCedKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField_BuscadorCedKeyReleased
+        // TODO add your handling code here:
+         cargarTabla(jTextField_BuscadorCed.getText());
+    }//GEN-LAST:event_jTextField_BuscadorCedKeyReleased
+
+    private void jTextField_CédulaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextField_CédulaFocusLost
+        // TODO add your handling code here:
+        c.validacion(evt);
+    }//GEN-LAST:event_jTextField_CédulaFocusLost
     public void SoloIngresoLetras(java.awt.event.KeyEvent evt) {
         char c = evt.getKeyChar();
 
@@ -373,9 +559,9 @@ public class Clientes extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable jTable_Clientes;
-    private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField3;
     private javax.swing.JTextField jTextField_Apellido;
+    private javax.swing.JTextField jTextField_BuscadorCed;
     private javax.swing.JTextField jTextField_Cédula;
     private javax.swing.JTextField jTextField_Dirección;
     private javax.swing.JTextField jTextField_Nombre;

@@ -5,6 +5,14 @@
  */
 package proyectofinal;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import javax.swing.JOptionPane;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -16,12 +24,161 @@ public class Empleados extends javax.swing.JFrame {
     /**
      * Creates new form Empleados
      */
+    
+    VerificarCedula c = new VerificarCedula();
+    public DefaultTableModel model;
     public Empleados() {
         initComponents();
-    TituloTablaEmpleados();
+     cargarTabla("");
+//        h1 = new Thread((Runnable) this);
+        // h1.start();
+        cargarDatos();
     }
-     DefaultTableModel modeloTabla = new DefaultTableModel();
+   
+public void guardarEmpeleados() {
+        Connection cn = (new ConexionBD()).conectar();
 
+        if (jTextField_CedEmpleado.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar cedula");
+           jTextField_CedEmpleado.requestFocus();
+        } else if (jTextField_NombreEmpleado.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar nombre");
+           jTextField_NombreEmpleado.requestFocus();
+        } else if (jTextField_ApellidoEmpleado.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar apellido");
+            jTextField_ApellidoEmpleado.requestFocus();
+        } else if (jTextField_DireccionEmpleado.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingresar direccion");
+           jTextField_DireccionEmpleado.requestFocus();
+        } else if(jTextField_TelefonoEmpleado.getText().trim().isEmpty()){
+            JOptionPane.showMessageDialog(null, "Ingresar TELEFONO");
+          jTextField_TelefonoEmpleado.requestFocus();
+        }else {
+            try {
+
+                String Cedula = jTextField_CedEmpleado.getText().toUpperCase();
+                String Nombre = jTextField_NombreEmpleado.getText().toUpperCase();
+                String Apellido = jTextField_ApellidoEmpleado.getText().toUpperCase();
+                String Telefono = jTextField_DireccionEmpleado.getText().toUpperCase();
+                String Direccion = jTextField_TelefonoEmpleado.getText().toUpperCase();
+
+                String sql = "insert into empleados (CED_EMP, NOM_EMP, APE_EMP, TEL_EMP, DIR_EMP)values(?,?,?,?,?)";
+
+                PreparedStatement psd = cn.prepareStatement(sql);
+                psd.setString(1, Cedula);
+                psd.setString(2, Nombre);
+                psd.setString(3, Apellido);
+                 psd.setString(4, Telefono);
+                psd.setString(5, Direccion);
+               
+
+                if (psd.executeUpdate() > 0) {
+                    JOptionPane.showMessageDialog(null, "Se ha insertado el dato");
+                }
+
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, "No se ha insertado el dato");
+            }
+        }
+
+    }
+
+    public void cargarDatos() {
+        jTable_Empleados.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if ( jTable_Empleados.getSelectedRow() != -1) {
+                    int fila =  jTable_Empleados.getSelectedRow();
+                    jTextField_CedEmpleado.setText( jTable_Empleados.getValueAt(fila, 0).toString());
+                    jTextField_NombreEmpleado.setText( jTable_Empleados.getValueAt(fila, 1).toString());
+                    jTextField_ApellidoEmpleado.setText( jTable_Empleados.getValueAt(fila, 2).toString());
+                    jTextField_TelefonoEmpleado.setText( jTable_Empleados.getValueAt(fila, 3).toString());
+                    jTextField_DireccionEmpleado.setText( jTable_Empleados.getValueAt(fila, 4).toString());
+                    //desbloquear();                    
+                }
+            }
+        });
+    }
+
+    public void limpiar() {
+//        txtCedula.setText("");
+//        txtNombre.setText("");
+//        txtApellido.setText("");
+//        txtDireccion.setText("");
+//        txtBuscarCedula.setText("");
+//        txtTelefono.setText("");
+    }
+
+    public void bloquear() {
+//        txtCedula.setEnabled(true);
+//        txtNombre.setEnabled(true);
+//        txtApellido.setEnabled(true);
+//        txtDireccion.setEnabled(true);
+//        txtTelefono.setEnabled(true);
+//        btActualizar.setEnabled(false);
+//        btEliminar.setEnabled(false);
+//        btCancelar.setEnabled(false);
+    }
+
+    public void desbloquear() {
+//        txtNombre.setEnabled(true);
+//        txtApellido.setEnabled(true);
+//        txtDireccion.setEnabled(true);
+//        txtTelefono.setEnabled(true);
+//        btActualizar.setEnabled(true);
+//        btEliminar.setEnabled(true);
+//        btCancelar.setEnabled(true);
+//        txtBuscarCedula.setEnabled(true);
+
+    }
+
+    public void cargarTabla(String dato) {
+        Connection cn = (new ConexionBD()).conectar();
+
+        String[] titulo = {"Cedula", "Nombre", "Apellido", "Direccion", "Teléfono"};
+        String[] registros = new String[5];
+        String sql;
+        sql = "SELECT * FROM EMPLEADOS WHERE CED_EMP LIKE '" + dato + "%'";
+        model = new DefaultTableModel(null, titulo);
+        try {
+            Statement st = cn.createStatement();
+            ResultSet rs = st.executeQuery(sql);
+            while (rs.next()) {
+                registros[0] = rs.getString("CED_EMP");
+                registros[1] = rs.getString("NOM_EMP");
+                registros[2] = rs.getString("APE_EMP");
+                registros[3] = rs.getString("DIR_EMP");
+                registros[4] = rs.getString("TEL_EMP");
+                model.addRow(registros);
+                jTable_Empleados.setModel(model);
+
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "La tabla CLIENTES tiene problemas al cargarse\n" + ex);
+        }
+    }
+
+    public void actualizarClientes() {
+        Connection cn = (new ConexionBD()).conectar();
+
+        String sql;
+        sql = "update cajeros set  NOM_EMP ='" + jTextField_NombreEmpleado.getText() + "',"
+                + "APE_EMP='" + jTextField_ApellidoEmpleado.getText() + "',"
+                + "DIR_EMP='" + jTextField_DireccionEmpleado.getText() + "',"
+                + "TEL_EMP='" + jTextField_TelefonoEmpleado.getText() + "'"
+                + "where CED_EMP='" + jTextField_CedEmpleado.getText() + "'";
+        try {
+            PreparedStatement psd = cn.prepareStatement(sql);
+            int n = psd.executeUpdate();//Ejecutar el 
+            if (n > 0) {
+                JOptionPane.showMessageDialog(this, "Se actualizo correctamente");
+                cargarTabla("");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "No se pudo actualizar" + ex);
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -47,7 +204,7 @@ public class Empleados extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         jTable_Empleados = new javax.swing.JTable();
         jPanel1 = new javax.swing.JPanel();
-        jTextField_BuscadorProd = new javax.swing.JTextField();
+        jTextField_BuscadorEmp = new javax.swing.JTextField();
         jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
@@ -69,6 +226,12 @@ public class Empleados extends javax.swing.JFrame {
 
         jLabel7.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
         jLabel7.setText("Apellido:");
+
+        jTextField_CedEmpleado.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                jTextField_CedEmpleadoFocusLost(evt);
+            }
+        });
 
         jButton_IngresarEmpleado.setFont(new java.awt.Font("Times New Roman", 0, 14)); // NOI18N
         jButton_IngresarEmpleado.setText("Ingresar");
@@ -158,6 +321,12 @@ public class Empleados extends javax.swing.JFrame {
         jPanel1.setForeground(new java.awt.Color(0, 0, 51));
         jPanel1.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
 
+        jTextField_BuscadorEmp.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                jTextField_BuscadorEmpKeyReleased(evt);
+            }
+        });
+
         jButton1.setText("Buscar");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -166,7 +335,7 @@ public class Empleados extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(80, 80, 80)
-                .addComponent(jTextField_BuscadorProd, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jTextField_BuscadorEmp, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(44, 44, 44)
                 .addComponent(jButton1)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -174,7 +343,7 @@ public class Empleados extends javax.swing.JFrame {
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                .addComponent(jTextField_BuscadorProd)
+                .addComponent(jTextField_BuscadorEmp)
                 .addComponent(jButton1))
         );
 
@@ -201,27 +370,22 @@ public class Empleados extends javax.swing.JFrame {
         pack();
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
-public void Insertarfilas() {
-   
-        String[] fila = new String[5];
-        fila[0] = jTextField_CedEmpleado.getText();
-        fila[1] = jTextField_NombreEmpleado.getText();
-        fila[2] = jTextField_ApellidoEmpleado.getText();
-        fila[3] = jTextField_TelefonoEmpleado.getText();
-        fila[4] =  jTextField_DireccionEmpleado.getText();
-        modeloTabla.addRow(fila);
-        jTable_Empleados.setModel(modeloTabla);
-        
-    }
-  public void TituloTablaEmpleados() {
-        String[] titulo = {"Cédula", "Nombre", "Apellido", "Teléfono", "Dirección"};
-        modeloTabla = new DefaultTableModel(null, titulo);
-        jTable_Empleados.setModel(modeloTabla);
-    }
+
     private void jButton_IngresarEmpleadoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton_IngresarEmpleadoActionPerformed
         // TODO add your handling code here:
-        Insertarfilas();
+      guardarEmpeleados();
+        cargarTabla("");
     }//GEN-LAST:event_jButton_IngresarEmpleadoActionPerformed
+
+    private void jTextField_BuscadorEmpKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField_BuscadorEmpKeyReleased
+        // TODO add your handling code here:
+        cargarTabla(jTextField_BuscadorEmp.getText());
+    }//GEN-LAST:event_jTextField_BuscadorEmpKeyReleased
+
+    private void jTextField_CedEmpleadoFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextField_CedEmpleadoFocusLost
+        // TODO add your handling code here:
+          c.validacion(evt);
+    }//GEN-LAST:event_jTextField_CedEmpleadoFocusLost
 
     /**
      * @param args the command line arguments
@@ -272,7 +436,7 @@ public void Insertarfilas() {
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable jTable_Empleados;
     private javax.swing.JTextField jTextField_ApellidoEmpleado;
-    private javax.swing.JTextField jTextField_BuscadorProd;
+    private javax.swing.JTextField jTextField_BuscadorEmp;
     private javax.swing.JTextField jTextField_CedEmpleado;
     private javax.swing.JTextField jTextField_DireccionEmpleado;
     private javax.swing.JTextField jTextField_NombreEmpleado;
